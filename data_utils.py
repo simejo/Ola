@@ -1,5 +1,14 @@
 import numpy as np
 import math
+import re
+
+
+# Regular expressions used to tokenize.
+_WORD_SPLIT = re.compile(b"([.,!?\"':;)(])")
+_DIGIT_RE = re.compile(br"\d")
+
+
+
 
 num_movie_scripts = 3
 
@@ -15,8 +24,8 @@ def getDataSets(num_movie_scripts):
 		X_train_temp = []
 		y_train_temp = []
 		for line in lines:
-			X_train_temp.append(line)
-			y_train_temp.append(line)
+			X_train_temp.append(basic_tokenizer(line))
+			y_train_temp.append(basic_tokenizer(line))
 		X_train_temp.pop()
 		y_train_temp.pop(0)
 
@@ -60,4 +69,4 @@ def basic_tokenizer(sentence):
 
 X_train, y_train, X_dev, y_dev = getDataSets(num_movie_scripts)
 
-#checkDataSets(X_train, y_train, 0,0,10)
+checkDataSets(X_train, y_train, 0,0,10)
