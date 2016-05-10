@@ -5,12 +5,12 @@ import collections
 import random
 import math
 
-vocabulary_size = 10
-embedding_size = 10
+vocabulary_size = 200
+embedding_size = 128
 num_sampled = 22
 num_skips = 2
 data_index = 0
-batch_size=8
+batch_size=128
 skip_window=1
 
 
@@ -41,7 +41,7 @@ def generate_batch(batch_size, num_skips, skip_window):
 	return batch, labels
 
 tokenized_data = data_utils.read_data(3)
-data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data)
+data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data, vocabulary_size)
 
 print '-------- data'
 print data
@@ -77,7 +77,7 @@ num_skips = 2         # How many times to reuse an input to generate a label.
 valid_size = 16     # Random set of words to evaluate similarity on.
 valid_window = 100  # Only pick dev samples in the head of the distribution.
 valid_examples = np.random.choice(valid_window, valid_size, replace=False)
-num_sampled = 64    # Number of negative examples to sample.
+num_sampled = 50    # Number of negative examples to sample.
 
 graph = tf.Graph()
 
@@ -140,6 +140,8 @@ with tf.Session(graph=graph) as session:
 		if step % 10000 == 0:
 			sim = similarity.eval()
 			for i in xrange(valid_size):
+				#print '---------------------------------'
+				#print 'trying to get reverse_dictionary[', valid_examples[i], ']'
 				valid_word = reverse_dictionary[valid_examples[i]]
 				top_k = 8 # number of nearest neighbors
 				nearest = (-sim[i, :]).argsort()[1:top_k+1]
@@ -151,9 +153,12 @@ with tf.Session(graph=graph) as session:
 	final_embeddings = normalized_embeddings.eval()
 
 # Step 6: Visualize the embeddings.
-
+"""
 def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
+	print " Checking: More labels than embedding"
 	assert low_dim_embs.shape[0] >= len(labels), "More labels than embeddings"
+	print 'ferdi'
+
 	plt.figure(figsize=(18, 18))  #in inches
 	for i, label in enumerate(labels):
 		x, y = low_dim_embs[i,:]
@@ -163,18 +168,23 @@ def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
 	plt.savefig(filename)
 
 try:
+	print "BEFORE SKLEARN"
 	from sklearn.manifold import TSNE
 	import matplotlib.pyplot as plt
+
+	print "AFTER"
 
 	tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
 	plot_only = 500
 	low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only,:])
+	print "BEFORE LABELS"
 	labels = [reverse_dictionary[i] for i in xrange(plot_only)]
+	print "START PLOT"
 	plot_with_labels(low_dim_embs, labels)
 
 except ImportError:
 	print("Please install sklearn and matplotlib to visualize embeddings.")
-
+"""
 # Train model
 """for inputs, labels in generate_batch(...):
 	feed_dict = {training_inputs: inputs, training_labels: labels}

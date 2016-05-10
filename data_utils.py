@@ -12,7 +12,7 @@ _DIGIT_RE = re.compile(br"\d")
 
 
 num_movie_scripts = 3
-vocabulary_size = 4
+#vocabulary_size = 200
 
 # Reads data and puts every sentence in arrays as tokens
 def read_data(num_movie_scripts):
@@ -29,7 +29,8 @@ def read_data(num_movie_scripts):
 		data_tokens.extend(data_tokens_temp)
 	return data_tokens
 
-def build_dataset(words):
+# Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
+def build_dataset(words, vocabulary_size):
 	count = [['UNK', -1]]
 	print 'words************'
 	print words[:5]
@@ -66,7 +67,7 @@ def basic_tokenizer(sentence):
 
 
 words = read_data(3)
-data, count, dictionary, reverse_dictionary = build_dataset(words)
+#data, count, dictionary, reverse_dictionary = build_dataset(words,)
 
 def print_dic(dic, counter):
 	c = 0
@@ -76,14 +77,7 @@ def print_dic(dic, counter):
 		if(c == counter):
 			break
 
-print '-------- data'
-print data
-print '-------- count'
-print count
-print '-------- dictionary'
-print_dic(dictionary, 5)
-print '-------- reverse_dictionary'
-print_dic(reverse_dictionary, 5)
+
 
 
 
