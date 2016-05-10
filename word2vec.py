@@ -249,3 +249,19 @@ try:
 
 except ImportError:
   print("Please install sklearn and matplotlib to visualize embeddings.")
+
+
+
+
+# WORD TO VECTOR
+
+# LSTM
+
+
+# SEQUENCE TO SEQUENCE
+
+
+
+
+
+

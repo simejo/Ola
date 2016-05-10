@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import re
+import collections
 
 
 # Regular expressions used to tokenize.
@@ -11,46 +12,43 @@ _DIGIT_RE = re.compile(br"\d")
 
 
 num_movie_scripts = 3
+vocabulary_size = 4
 
-def getDataSets(num_movie_scripts):
-	X_train = []
-	y_train = []
+# Reads data and puts every sentence in arrays as tokens
+def read_data(num_movie_scripts):
+	data_tokens = []
+	# Append each line in file to the set
 	for i in range(1, num_movie_scripts):
 		path = 'data/'+str(i)+'raw.txt'
-		f = open(path, 'r')
 		print 'Reading ', path, '...'
-		
 		lines = [line.rstrip('\n') for line in open(path)]
-		X_train_temp = []
-		y_train_temp = []
+		data_tokens_temp = []
 		for line in lines:
-			X_train_temp.append(basic_tokenizer(line))
-			y_train_temp.append(basic_tokenizer(line))
-		X_train_temp.pop()
-		y_train_temp.pop(0)
+			# Tokenize each sentence
+			data_tokens_temp.extend(re.split(_WORD_SPLIT, line))
+		data_tokens.extend(data_tokens_temp)
+	return data_tokens
 
-		X_train.extend(X_train_temp)
-		y_train.extend(y_train_temp)
-		f.close()
-
-	X_train = np.array(X_train)
-	y_train = np.array(y_train)
-
-	# Use 1/10 as development data
-	print len(X_train)
-	num_dev_data = math.floor(len(X_train)/10)
-	num_train_data = len(X_train)-num_dev_data
-	X_dev = X_train[num_train_data:]
-	y_dev = y_train[num_train_data:]
-	X_train = X_train[:num_train_data]
-	y_train = y_train[:num_train_data]
-	#print len(X_train), len(y_train), len(X_dev), len(y_dev)
-
-	# Tokenize all the datasets - do it before?
-
-
-	return X_train, y_train, X_dev, y_dev
-
+def build_dataset(words):
+	count = [['UNK', -1]]
+	print 'words************'
+	print words[:5]
+	count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
+	dictionary = dict()
+	for word, _ in count:
+		dictionary[word] = len(dictionary)
+	data = list()
+	unk_count = 0
+	for word in words:
+		if word in dictionary:
+			index = dictionary[word]
+		else:
+			index = 0  # dictionary['UNK']
+			unk_count = unk_count + 1
+		data.append(index)
+	count[0][1] = unk_count
+	reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
+	return data, count, dictionary, reverse_dictionary
 
 def checkDataSets(X_train, y_train, X_dev, y_dev, num_iters):
 	for i in range(0,num_iters):
@@ -67,6 +65,28 @@ def basic_tokenizer(sentence):
   return [w for w in words if w]
 
 
-X_train, y_train, X_dev, y_dev = getDataSets(num_movie_scripts)
+words = read_data(3)
+data, count, dictionary, reverse_dictionary = build_dataset(words)
 
-checkDataSets(X_train, y_train, 0,0,10)
+def print_dic(dic, counter):
+	c = 0
+	for x in dic:
+		print x
+		c += 1
+		if(c == counter):
+			break
+
+print '-------- data'
+print data
+print '-------- count'
+print count
+print '-------- dictionary'
+print_dic(dictionary, 5)
+print '-------- reverse_dictionary'
+print_dic(reverse_dictionary, 5)
+
+
+
+#checkDataSets(X_train, y_train, 0,0,10)
+
+
