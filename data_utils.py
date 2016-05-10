@@ -22,6 +22,7 @@ def getDataSets(num_movie_scripts):
 
 		X_train.extend(X_train_temp)
 		y_train.extend(y_train_temp)
+		f.close()
 
 	X_train = np.array(X_train)
 	y_train = np.array(y_train)
@@ -42,13 +43,21 @@ def getDataSets(num_movie_scripts):
 	return X_train, y_train, X_dev, y_dev
 
 
-def checkDataSets(X_train, y_train, X_dev, y_dev):
-	for i in range(0,10):
+def checkDataSets(X_train, y_train, X_dev, y_dev, num_iters):
+	for i in range(0,num_iters):
 		print '--------------------------'
 		print 'User: 	:',X_train[i]
 		print 'Ola:	:', y_train[i]
 
 
+def basic_tokenizer(sentence):
+  """Very basic tokenizer: split the sentence into a list of tokens."""
+  words = []
+  for space_separated_fragment in sentence.strip().split():
+    words.extend(re.split(_WORD_SPLIT, space_separated_fragment))
+  return [w for w in words if w]
+
+
 X_train, y_train, X_dev, y_dev = getDataSets(num_movie_scripts)
 
-checkDataSets(X_train, y_train, 0,0)
+#checkDataSets(X_train, y_train, 0,0,10)
