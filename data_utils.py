@@ -5,14 +5,14 @@ import collections
 
 
 # Regular expressions used to tokenize.
-_WORD_SPLIT = re.compile(b"([.,!?\"':;)(])")
+_WORD_SPLIT = (b"([.,!?\"':;)(])\s+")
 _DIGIT_RE = re.compile(br"\d")
+#\s|(?<!\d)[,.]|[,.](?!\d)\W+
 
 
 
 
 num_movie_scripts = 3
-#vocabulary_size = 200
 
 # Reads data and puts every sentence in arrays as tokens
 def read_data(num_movie_scripts):
@@ -25,15 +25,16 @@ def read_data(num_movie_scripts):
 		data_tokens_temp = []
 		for line in lines:
 			# Tokenize each sentence
-			data_tokens_temp.extend(re.split(_WORD_SPLIT, line))
+			data_tokens_temp.extend(re.findall(r'\S+', line))
 		data_tokens.extend(data_tokens_temp)
+
 	return data_tokens
 
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
 def build_dataset(words, vocabulary_size):
 	count = [['UNK', -1]]
 	print 'words************'
-	print words[:5]
+	print words[:100]
 	count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
 	dictionary = dict()
 	for word, _ in count:
