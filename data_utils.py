@@ -14,7 +14,8 @@ _DIGIT_RE = re.compile(br"\d")
 
 num_movie_scripts = 3
 
-# Reads data and puts every sentence in arrays as tokens
+# Reads data and puts every words in a ONE DIMENSIONAL array as tokens
+# data_tokens[0] = 'This'
 def read_data(num_movie_scripts):
 	data_tokens = []
 	# Append each line in file to the set
@@ -30,8 +31,9 @@ def read_data(num_movie_scripts):
 
 	return data_tokens
 
-
-def get_sentences(num_movie_scripts):
+# Reads data and puts every sentence in a TWO DIMENSIONAL array as tokens
+# data_tokens[0] = ['This', 'is', 'a', 'sentence']
+def read_sentences(num_movie_scripts):
 	data_tokens = []
 	# Append each line in file to the set
 	for i in range(1, num_movie_scripts):
@@ -43,16 +45,11 @@ def get_sentences(num_movie_scripts):
 			# Tokenize each sentence
 			data_tokens_temp.append(re.findall(r'\S+', line))
 		data_tokens.extend(data_tokens_temp)
-	print 'DATA TOKENS'
-	print data_tokens[:5]
-	print 'Done in get_sentences'
 	return data_tokens
 
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
 def build_dataset(words, vocabulary_size):
 	count = [['UNK', -1]]
-	print 'words************'
-	print words[:100]
 	count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
 	dictionary = dict()
 	for word, _ in count:
@@ -85,7 +82,7 @@ def basic_tokenizer(sentence):
   return [w for w in words if w]
 
 
-words = read_data(3)
+#words = read_data(3)
 #data, count, dictionary, reverse_dictionary = build_dataset(words,)
 
 def print_dic(dic, counter):

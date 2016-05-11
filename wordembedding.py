@@ -43,23 +43,17 @@ def generate_batch(batch_size, num_skips, skip_window):
 
 def generateEncodedFile(filename, tokenized_array):
 	f = open(filename, 'w')
-	print tokenized_array[:10]
-
 	for sentence in tokenized_array:
 		encoded_sentence = ""
 		for word in sentence:
-			#print word
 			if word in dictionary:
 				encoded_word = dictionary[word]
 			else:
 				encoded_word = dictionary['UNK']
 			encoded_sentence += str(encoded_word) + " "
 		print sentence
-		encoded_sentence = encoded_sentence[:-1]
-		# Write sentence to file with linjeskift
-		f.write(encoded_sentence + '\n')
-		#print encoded_sentence
-
+		encoded_sentence = encoded_sentence[:-1] # Remove final space
+		f.write(encoded_sentence + '\n') # Write sentence to file
 	f.close()
 
 
@@ -83,7 +77,7 @@ print '-------- reverse_dictionary'
 data_utils.print_dic(reverse_dictionary, 5)
 print reverse_dictionary
 print '-------- generateEncodedFile'
-tokenized_sentences = data_utils.get_sentences(num_movie_scripts)
+tokenized_sentences = data_utils.read_sentences(num_movie_scripts)
 # Generate file
 generateEncodedFile('X_train_for_3_scripts', tokenized_sentences)
 print "FERDI"
