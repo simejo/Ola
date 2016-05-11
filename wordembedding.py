@@ -5,7 +5,6 @@ import collections
 import random
 import math
 
-vocabulary_size = 200
 embedding_size = 128
 num_sampled = 22
 num_skips = 2
@@ -66,6 +65,7 @@ print '-------- tokenized_data'
 print tokenized_data[:10]
 data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data, vocabulary_size)
 
+
 print '-------- data'
 print data
 print '-------- count'
@@ -80,7 +80,6 @@ print '-------- generateEncodedFile'
 tokenized_sentences = data_utils.read_sentences(num_movie_scripts)
 # Generate file
 generateEncodedFile('X_train_for_3_scripts', tokenized_sentences)
-print "FERDI"
 
 """
 batch, labels = generate_batch(batch_size, num_skips, skip_window)

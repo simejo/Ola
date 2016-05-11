@@ -45,6 +45,7 @@ def read_sentences(num_movie_scripts):
 			# Tokenize each sentence
 			data_tokens_temp.append(re.findall(r'\S+', line))
 		data_tokens.extend(data_tokens_temp)
+		data_tokens.extend(['NEW_SCRIPT'])
 	return data_tokens
 
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
