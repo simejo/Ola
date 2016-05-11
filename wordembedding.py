@@ -12,7 +12,7 @@ num_skips = 2
 data_index = 0
 batch_size=128
 skip_window=1
-
+num_movie_scripts = 4
 
 # Step 3: Function to generate a training batch for the skip-gram model.
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!! Compare with tensorflows data
@@ -40,7 +40,36 @@ def generate_batch(batch_size, num_skips, skip_window):
 		data_index = (data_index + 1) % len(data)
 	return batch, labels
 
-tokenized_data = data_utils.read_data(3)
+
+def generateEncodedFile(filename, tokenized_array):
+	f = open(filename, 'w')
+	print tokenized_array[:10]
+
+	for sentence in tokenized_array:
+		encoded_sentence = ""
+		for word in sentence:
+			#print word
+			if word in dictionary:
+				encoded_word = dictionary[word]
+			else:
+				encoded_word = dictionary['UNK']
+			encoded_sentence += str(encoded_word) + " "
+		print sentence
+		encoded_sentence = encoded_sentence[:-1]
+		# Write sentence to file with linjeskift
+		f.write(encoded_sentence + '\n')
+		#print encoded_sentence
+
+	f.close()
+
+
+
+
+
+# Generate dictionary for dataset
+tokenized_data = data_utils.read_data(num_movie_scripts)
+print '-------- tokenized_data'
+print tokenized_data[:10]
 data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data, vocabulary_size)
 
 print '-------- data'
@@ -49,9 +78,17 @@ print '-------- count'
 print count
 print '-------- dictionary'
 data_utils.print_dic(dictionary, 5)
+print dictionary
 print '-------- reverse_dictionary'
 data_utils.print_dic(reverse_dictionary, 5)
+print reverse_dictionary
+print '-------- generateEncodedFile'
+tokenized_sentences = data_utils.get_sentences(num_movie_scripts)
+# Generate file
+generateEncodedFile('X_train_for_3_scripts', tokenized_sentences)
+print "FERDI"
 
+"""
 batch, labels = generate_batch(batch_size, num_skips, skip_window)
 
 print '--------- batch'
@@ -62,6 +99,7 @@ print labels
 for i in range(8):
   print(batch[i], '->', labels[i, 0])
   print(reverse_dictionary[batch[i]], '->', reverse_dictionary[labels[i, 0]])
+
 
 
 # Step 4: Build and train a skip-gram model.
@@ -153,7 +191,7 @@ with tf.Session(graph=graph) as session:
 	final_embeddings = normalized_embeddings.eval()
 
 # Step 6: Visualize the embeddings.
-"""
+
 def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
 	print " Checking: More labels than embedding"
 	assert low_dim_embs.shape[0] >= len(labels), "More labels than embeddings"

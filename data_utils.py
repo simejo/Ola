@@ -30,6 +30,24 @@ def read_data(num_movie_scripts):
 
 	return data_tokens
 
+
+def get_sentences(num_movie_scripts):
+	data_tokens = []
+	# Append each line in file to the set
+	for i in range(1, num_movie_scripts):
+		path = 'data/'+str(i)+'raw.txt'
+		print 'Reading ', path, '...'
+		lines = [line.rstrip('\n') for line in open(path)]
+		data_tokens_temp = []
+		for line in lines:
+			# Tokenize each sentence
+			data_tokens_temp.append(re.findall(r'\S+', line))
+		data_tokens.extend(data_tokens_temp)
+	print 'DATA TOKENS'
+	print data_tokens[:5]
+	print 'Done in get_sentences'
+	return data_tokens
+
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
 def build_dataset(words, vocabulary_size):
 	count = [['UNK', -1]]
