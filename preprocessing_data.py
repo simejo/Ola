@@ -25,6 +25,15 @@ def generateEncodedFile(filename, tokenized_sentences):
 		f.write(encoded_sentence + '\n') # Write sentence to file
 	f.close()
 
+
+def createVocabulary(dictionary, vocabulary_path):
+	f = open(vocabulary_path, 'w')
+	for key in dictionary:
+		f.write(dictionary[key] + '\n')
+	f.close()
+
+
+
 # Generate dictionary for dataset
 print '------------------------------------------------'
 print ' Generating dictionary based on ', str(num_movie_scripts - 1), ' scripts'
@@ -32,8 +41,9 @@ print '------------------------------------------------'
 
 tokenized_data = data_utils.read_data(num_movie_scripts)
 data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data, vocabulary_size)
+createVocabulary(reverse_dictionary, 'vocabulary_for_3_movies.txt')
 
-""" DRIT I AA SLETT
+#DRIT I AA SLETT
 print '-------- data'
 print data
 print '-------- count'
@@ -44,7 +54,7 @@ print dictionary
 print '-------- reverse_dictionary'
 data_utils.print_dic(reverse_dictionary, 5)
 print reverse_dictionary
-"""
+
 
 # Generate a encoded file using the freated dictionary
 print '------------------------------------------------'
