@@ -144,8 +144,8 @@ def train():
       FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)"""
   en_train = './X_train.txt'
   fr_train = './y_train.txt'
-  en_dev = './y_train.txt'
-  fr_dev = './X_train.txt'
+  en_dev = './y_dev.txt'
+  fr_dev = './X_dev.txt'
 
   with tf.Session() as sess:
     # Create model.
