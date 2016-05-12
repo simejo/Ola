@@ -44,6 +44,8 @@ import tensorflow as tf
 import data_utils
 from tensorflow.models.rnn.translate import seq2seq_model
 
+vocab_path = './vocabulary_for_100_movies.txt'
+
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
 tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
@@ -140,10 +142,10 @@ def train():
   #print("Preparing WMT data in %s" % FLAGS.data_dir)
   """en_train, fr_train, en_dev, fr_dev, _, _ = data_utils.prepare_wmt_data(
       FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)"""
-  en_train = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/X_train.txt'
-  fr_train = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/y_train.txt'
-  en_dev = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/y_train.txt'
-  fr_dev = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/X_train.txt'
+  en_train = './X_train.txt'
+  fr_train = './y_train.txt'
+  en_dev = './y_train.txt'
+  fr_dev = './X_train.txt'
 
   with tf.Session() as sess:
     # Create model.
@@ -226,9 +228,9 @@ def decode():
                                  "vocab%d.en" % FLAGS.en_vocab_size)
     fr_vocab_path = os.path.join(FLAGS.data_dir,
                                  "vocab%d.fr" % FLAGS.fr_vocab_size)"""
-    en_vocab_path = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/vocabulary_for_3_movies.txt'#data_utils.initialize_vocabulary(en_vocab_path)
+    en_vocab_path = vocab_path #data_utils.initialize_vocabulary(en_vocab_path)
     en_vocab, _ = data_utils.initialize_vocabulary(en_vocab_path)
-    rev_fr_vocab_path = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/vocabulary_for_3_movies.txt' #data_utils.initialize_vocabulary(fr_vocab_path)
+    rev_fr_vocab_path = vocab_path  #data_utils.initialize_vocabulary(fr_vocab_path)
     _, rev_fr_vocab = data_utils.initialize_vocabulary(rev_fr_vocab_path)
 
     # Decode from standard input.

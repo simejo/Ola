@@ -1,4 +1,6 @@
-import data_utils2 as data_utils
+import re
+import collections
+import shutil
 
 num_movie_scripts = 100
 vocabulary_size = 2000
@@ -25,7 +27,7 @@ TODO:
 #FROM DATA UTILS
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
 def build_dataset(words, vocabulary_size):
-	count = []
+	count = [['_UNK', -1]]
 	count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
 	dictionary = dict()
 	for word, _ in count:
@@ -45,12 +47,13 @@ def build_dataset(words, vocabulary_size):
 
 def createVocabulary(dictionary, vocabulary_path):
 	f = open(vocabulary_path, 'w')
+	
 	for key in dictionary:
 		f.write(dictionary[key] + '\n')
 	f.close()
 
 
-def generateEncodedFile(filename, tokenized_sentences, dictionary):
+def generateEncodedFile(filename, filename2 tokenized_sentences, dictionary):
 	f = open(filename, 'w')
 	unk_id = dictionary['_UNK']
 	for sentence in tokenized_sentences:
@@ -64,6 +67,7 @@ def generateEncodedFile(filename, tokenized_sentences, dictionary):
 		encoded_sentence = encoded_sentence[:-1] # Remove final space
 		f.write(encoded_sentence + '\n') # Write sentence to file
 	f.close()
+	shutil.copy(filename, filename2)
 
 
 
@@ -95,12 +99,8 @@ def read_data(num_movie_scripts):
 
 
 tokenized_data = read_data(num_movie_scripts)
-data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized_data, vocabulary_size)
-createVocabulary(reverse_dictionary, 'vocabulary_for_3_movies.txt')
-
-
-
-
+data, count, dictionary, reverse_dictionary = build_dataset(tokenized_data, vocabulary_size)
+createVocabulary(reverse_dictionary, 'vocabulary_for_' + str(num_movie_scripts) + '_movies.txt')
 
 
 # Generate a encoded file using the freated dictionary
@@ -127,7 +127,7 @@ def read_sentences(num_movie_scripts):
 		data_tokens.extend(['NEW_SCRIPT'])
 	return data_tokens
 
-tokenized_sentences = data_utils.read_sentences(num_movie_scripts)
+tokenized_sentences = read_sentences(num_movie_scripts)
 #print tokenized_sentences
 generateEncodedFile(path_for_file, tokenized_sentences, dictionary)
 
