@@ -41,7 +41,7 @@ import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
-from tensorflow.models.rnn.translate import data_utils
+import data_utils
 from tensorflow.models.rnn.translate import seq2seq_model
 
 
@@ -91,12 +91,17 @@ def read_data(source_path, target_path, max_size=None):
       into the n-th bucket, i.e., such that len(source) < _buckets[n][0] and
       len(target) < _buckets[n][1]; source and target are lists of token-ids.
   """
+  print('Inside read_data')
   data_set = [[] for _ in _buckets]
   with tf.gfile.GFile(source_path, mode="r") as source_file:
+    print('First with')
     with tf.gfile.GFile(target_path, mode="r") as target_file:
+      print('Second with')
       source, target = source_file.readline(), target_file.readline()
       counter = 0
+      print('before while')
       while source and target and (not max_size or counter < max_size):
+
         counter += 1
         if counter % 100000 == 0:
           print("  reading data line %d" % counter)
@@ -132,9 +137,13 @@ def create_model(session, forward_only):
 def train():
   """Train a en->fr translation model using WMT data."""
   # Prepare WMT data.
-  print("Preparing WMT data in %s" % FLAGS.data_dir)
-  en_train, fr_train, en_dev, fr_dev, _, _ = data_utils.prepare_wmt_data(
-      FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)
+  #print("Preparing WMT data in %s" % FLAGS.data_dir)
+  """en_train, fr_train, en_dev, fr_dev, _, _ = data_utils.prepare_wmt_data(
+      FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)"""
+  en_train = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/X_train.txt'
+  fr_train = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/y_train.txt'
+  en_dev = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/y_train.txt'
+  fr_dev = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/X_train.txt'
 
   with tf.Session() as sess:
     # Create model.
@@ -212,18 +221,25 @@ def decode():
     model.batch_size = 1  # We decode one sentence at a time.
 
     # Load vocabularies.
+    """
     en_vocab_path = os.path.join(FLAGS.data_dir,
                                  "vocab%d.en" % FLAGS.en_vocab_size)
     fr_vocab_path = os.path.join(FLAGS.data_dir,
-                                 "vocab%d.fr" % FLAGS.fr_vocab_size)
+                                 "vocab%d.fr" % FLAGS.fr_vocab_size)"""
+    en_vocab_path = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/vocabulary_for_3_movies.txt'#data_utils.initialize_vocabulary(en_vocab_path)
     en_vocab, _ = data_utils.initialize_vocabulary(en_vocab_path)
-    _, rev_fr_vocab = data_utils.initialize_vocabulary(fr_vocab_path)
+    rev_fr_vocab_path = '/Users/siljechristensen/Documents/School/Utveksling/Spring2016/291K/tensorflow/tensorflow/models/rnn/translate/vocabulary_for_3_movies.txt' #data_utils.initialize_vocabulary(fr_vocab_path)
+    _, rev_fr_vocab = data_utils.initialize_vocabulary(rev_fr_vocab_path)
 
     # Decode from standard input.
     sys.stdout.write("> ")
     sys.stdout.flush()
     sentence = sys.stdin.readline()
     while sentence:
+      print(tf.compat.as_bytes(sentence))
+      print('input sentence is: ')
+      print(sentence)
+
       # Get token-ids for the input sentence.
       token_ids = data_utils.sentence_to_token_ids(tf.compat.as_bytes(sentence), en_vocab)
       # Which bucket does it belong to?

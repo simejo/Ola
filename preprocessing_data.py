@@ -1,4 +1,4 @@
-import data_utils
+import data_utils2 as data_utils
 
 num_movie_scripts = 4
 vocabulary_size = 200
@@ -8,7 +8,7 @@ path_for_file = 'X_train.txt'
 """
 TODO: 
 1. run generateEncodedFile on all the scripts
-2. Remove the 
+2. Remove the space after the 'fnutts' (I' ll, haven' t)
 """
 def generateEncodedFile(filename, tokenized_sentences):
 	f = open(filename, 'w')
@@ -44,7 +44,7 @@ data, count, dictionary, reverse_dictionary = data_utils.build_dataset(tokenized
 createVocabulary(reverse_dictionary, 'vocabulary_for_3_movies.txt')
 
 #DRIT I AA SLETT
-print '-------- data'
+"""print '-------- data'
 print data
 print '-------- count'
 print count
@@ -54,7 +54,7 @@ print dictionary
 print '-------- reverse_dictionary'
 data_utils.print_dic(reverse_dictionary, 5)
 print reverse_dictionary
-
+"""
 
 # Generate a encoded file using the freated dictionary
 print '------------------------------------------------'
