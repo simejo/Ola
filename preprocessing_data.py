@@ -4,7 +4,12 @@ import shutil
 
 num_movie_scripts = 100
 vocabulary_size = 2000
-path_for_file = 'X_train.txt'
+fraction_dev = 50
+path_for_x_train = 'X_train.txt'
+path_for_y_train = 'y_train.txt'
+path_for_x_dev = 'X_dev.txt'
+path_for_y_dev = 'y_dev.txt'
+
 
 _PAD = b"_PAD"
 _GO = b"_GO"
@@ -53,22 +58,69 @@ def createVocabulary(dictionary, vocabulary_path):
 	f.close()
 
 
-def generateEncodedFile(filename, filename2 tokenized_sentences, dictionary):
-	f = open(filename, 'w')
-	unk_id = dictionary['_UNK']
-	for sentence in tokenized_sentences:
-		encoded_sentence = ""
-		for word in sentence:
-			if word in dictionary:
-				encoded_word = dictionary[word]
-			else:
-				encoded_word = unk_id
-			encoded_sentence += str(encoded_word) + " "
-		encoded_sentence = encoded_sentence[:-1] # Remove final space
-		f.write(encoded_sentence + '\n') # Write sentence to file
-	f.close()
-	shutil.copy(filename, filename2)
+def generateEncodedFile(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
+	encoded_holder = []
+	f1 = open(x_train_file, 'w')
 
+	last_line = tokenized_sentences.pop()
+	first_line = tokenized_sentences.pop(0)
+	dev_counter = int(len(tokenized_sentences) - len(tokenized_sentences)/fraction_dev)
+
+	unk_id = dictionary['_UNK']
+	first_line_encoded = encode_sentence(first_line, dictionary, unk_id)
+	f1.write(first_line_encoded + '\n')
+
+	# Creates data for X_train
+	for x in xrange(dev_counter):
+		encoded_sentence = encode_sentence(tokenized_sentences[x], dictionary, unk_id)
+		encoded_holder.append(encoded_sentence)
+		f1.write(encoded_sentence + '\n') # Write sentence to file
+	f1.close()
+
+	d1 = open(x_dev_file, 'w')
+	# Creates data for x_dev_file
+	for x in xrange(dev_counter, len(tokenized_sentences)):
+		encoded_sentence = encode_sentence(tokenized_sentences[x], dictionary, unk_id)
+		encoded_holder.append(encoded_sentence)
+		d1.write(encoded_sentence + '\n') # Write sentence to file
+
+	d1.close()
+
+	# Creates data for y_train
+	f2 = open(y_train_file, 'w')
+
+	for x in xrange(dev_counter + 1):
+		f2.write(encoded_holder[x] + '\n') # Write sentence to file
+
+	f2.close()
+
+	# Creates data for y_dev
+	d2 = open(y_dev_file, 'w')
+	for x in xrange(dev_counter + 1, len(tokenized_sentences)):
+		d2.write(encoded_holder[x] + '\n') # Write sentence to file
+
+	last_line_encoded = encode_sentence(last_line, dictionary, unk_id)
+	d2.write(last_line_encoded + '\n')
+	d2.close()
+	
+def encode_sentence(sentence, dictionary, unk_id):
+	# Extract first word
+	if not sentence:
+		return ""
+	first_word = sentence.pop(0)
+	if first_word in dictionary:
+		encoded_sentence = str(dictionary[first_word])
+	else:
+		encoded_sentence = str(unk_id)
+
+	# Loop rest of the words
+	for word in sentence:
+		if word in dictionary:
+			encoded_word = dictionary[word]
+		else:
+			encoded_word = unk_id
+		encoded_sentence += " " + str(encoded_word)
+	return encoded_sentence
 
 
 
@@ -106,7 +158,7 @@ createVocabulary(reverse_dictionary, 'vocabulary_for_' + str(num_movie_scripts) 
 # Generate a encoded file using the freated dictionary
 print '------------------------------------------------'
 print ' Creating encoded file using created dictionary'
-print ' (Saved in  ', path_for_file, ')'
+print ' (Saved in  ', path_for_x_train, ')'
 print '------------------------------------------------'
 
 # FROM DATA UTILS
@@ -124,12 +176,11 @@ def read_sentences(num_movie_scripts):
 			# Tokenize each sentence
 			data_tokens_temp.append(re.findall(r'\S+', line))
 		data_tokens.extend(data_tokens_temp)
-		data_tokens.extend(['NEW_SCRIPT'])
 	return data_tokens
 
 tokenized_sentences = read_sentences(num_movie_scripts)
 #print tokenized_sentences
-generateEncodedFile(path_for_file, tokenized_sentences, dictionary)
+generateEncodedFile(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
 
 
 
