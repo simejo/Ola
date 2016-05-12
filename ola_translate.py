@@ -42,7 +42,8 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 import data_utils
-from tensorflow.models.rnn.translate import seq2seq_model
+import seq2seq_model # OBS! Using tf's data_utils in seq2seq_model file
+
 
 vocab_path = './vocabulary_for_100_movies.txt'
 
@@ -76,6 +77,7 @@ FLAGS = tf.app.flags.FLAGS
 _buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
 
+# Create source-target pairs in buckets
 def read_data(source_path, target_path, max_size=None):
   """Read data from source and target files and put into buckets.
 
@@ -93,15 +95,11 @@ def read_data(source_path, target_path, max_size=None):
       into the n-th bucket, i.e., such that len(source) < _buckets[n][0] and
       len(target) < _buckets[n][1]; source and target are lists of token-ids.
   """
-  print('Inside read_data')
   data_set = [[] for _ in _buckets]
   with tf.gfile.GFile(source_path, mode="r") as source_file:
-    print('First with')
     with tf.gfile.GFile(target_path, mode="r") as target_file:
-      print('Second with')
       source, target = source_file.readline(), target_file.readline()
       counter = 0
-      print('before while')
       while source and target and (not max_size or counter < max_size):
 
         counter += 1
@@ -119,6 +117,7 @@ def read_data(source_path, target_path, max_size=None):
   return data_set
 
 
+# Creating seq2seq model, either from scratch or based on checkpoint files
 def create_model(session, forward_only):
   """Create translation model and initialize or load parameters in session."""
   model = seq2seq_model.Seq2SeqModel(
@@ -135,13 +134,12 @@ def create_model(session, forward_only):
     session.run(tf.initialize_all_variables())
   return model
 
-
+  """ 
+  Training model. 
+  (Originally en->fr, now x->y)
+  """
 def train():
-  """Train a en->fr translation model using WMT data."""
-  # Prepare WMT data.
-  #print("Preparing WMT data in %s" % FLAGS.data_dir)
-  """en_train, fr_train, en_dev, fr_dev, _, _ = data_utils.prepare_wmt_data(
-      FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)"""
+
   en_train = './X_train.txt'
   fr_train = './y_train.txt'
   en_dev = './y_dev.txt'
@@ -155,8 +153,10 @@ def train():
     # Read data into buckets and compute their sizes.
     print ("Reading development and training data (limit: %d)."
            % FLAGS.max_train_data_size)
+    print ('Making buckets from dev_set and train_set...')
+    # Making buckets from dev_set and train_set
     dev_set = read_data(en_dev, fr_dev)
-    train_set = read_data(en_train, fr_train, FLAGS.max_train_data_size)
+    train_set = read_data(x_train, y_train, FLAGS.max_train_data_size)
     train_bucket_sizes = [len(train_set[b]) for b in xrange(len(_buckets))]
     train_total_size = float(sum(train_bucket_sizes))
 
