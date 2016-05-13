@@ -38,7 +38,7 @@ import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
-import data_utils
+import preprocessing_data as prepros
 from tensorflow.models.rnn.translate import seq2seq_model
 
 vocab_path = './vocabulary_for_100_movies.txt'
@@ -102,7 +102,7 @@ def read_data(source_path, target_path, max_size=None):
           sys.stdout.flush()
         source_ids = [int(x) for x in source.split()]
         target_ids = [int(x) for x in target.split()]
-        target_ids.append(data_utils.EOS_ID)
+        target_ids.append(prepros.EOS_ID)
         for bucket_id, (source_size, target_size) in enumerate(_buckets):
           if len(source_ids) < source_size and len(target_ids) < target_size:
             data_set[bucket_id].append([source_ids, target_ids])
@@ -221,22 +221,18 @@ def decode():
                                  "vocab%d.en" % FLAGS.en_vocab_size)
     fr_vocab_path = os.path.join(FLAGS.data_dir,
                                  "vocab%d.fr" % FLAGS.fr_vocab_size)"""
-    en_vocab_path = vocab_path #data_utils.initialize_vocabulary(en_vocab_path)
-    en_vocab, _ = data_utils.initialize_vocabulary(en_vocab_path)
-    rev_fr_vocab_path = vocab_path  #data_utils.initialize_vocabulary(fr_vocab_path)
-    _, rev_fr_vocab = data_utils.initialize_vocabulary(rev_fr_vocab_path)
+    #en_vocab_path = vocab_path #data_utils.initialize_vocabulary(en_vocab_path)
+    en_vocab, _ = prepros.initialize_vocabulary(vocab_path)
+    #rev_fr_vocab_path = vocab_path  #data_utils.initialize_vocabulary(fr_vocab_path)
+    _, rev_fr_vocab = prepros.initialize_vocabulary(vocab_path)
 
     # Decode from standard input.
-    sys.stdout.write("> ")
+    sys.stdout.write("Human >: ")
     sys.stdout.flush()
     sentence = sys.stdin.readline()
     while sentence:
-      print(tf.compat.as_bytes(sentence))
-      print('input sentence is: ')
-      print(sentence)
-
       # Get token-ids for the input sentence.
-      token_ids = data_utils.sentence_to_token_ids(tf.compat.as_bytes(sentence), en_vocab)
+      token_ids = prepros.sentence_to_token_ids(tf.compat.as_bytes(sentence), en_vocab)
       # Which bucket does it belong to?
       bucket_id = min([b for b in xrange(len(_buckets))
                        if _buckets[b][0] > len(token_ids)])
@@ -249,11 +245,11 @@ def decode():
       # This is a greedy decoder - outputs are just argmaxes of output_logits.
       outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
       # If there is an EOS symbol in outputs, cut them at that point.
-      if data_utils.EOS_ID in outputs:
-        outputs = outputs[:outputs.index(data_utils.EOS_ID)]
+      if prepros.EOS_ID in outputs:
+        outputs = outputs[:outputs.index(prepros.EOS_ID)]
       # Print out French sentence corresponding to outputs.
-      print(" ".join([tf.compat.as_str(rev_fr_vocab[output]) for output in outputs]))
-      print("> ", end="")
+      print("Ola >: " + " ".join([tf.compat.as_str(rev_fr_vocab[output]) for output in outputs]))
+      print("Human >: ", end="")
       sys.stdout.flush()
       sentence = sys.stdin.readline()
 
