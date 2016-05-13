@@ -2,8 +2,8 @@ import re
 import collections
 import shutil
 
-num_movie_scripts = 100
-vocabulary_size = 2000
+num_movie_scripts = 2300
+vocabulary_size = 10000
 fraction_dev = 50
 path_for_x_train = 'X_train.txt'
 path_for_y_train = 'y_train.txt'
