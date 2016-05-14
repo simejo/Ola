@@ -3,7 +3,7 @@ import collections
 import shutil
 from tensorflow.python.platform import gfile
 
-num_movie_scripts = 2300
+num_movie_scripts = 1
 vocabulary_size = 10000
 fraction_dev = 50
 path_for_x_train = 'X_train.txt'
@@ -91,7 +91,43 @@ def initialize_vocabulary(vocabulary_path):
     raise ValueError("Vocabulary file %s not found.", vocabulary_path)
 
 
+def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
+	encoded_holder = []
+	for sentence in tokenized_sentences: 
+		encoded_holder.append(encode_sentence[sentence])
+
+	encoded_holder = encoded_holder.reverse()
+	f1 = open(x_train_file, 'w')
+	f2 = open(x_train_file, 'w')
+
+	fraction = int(len(encoded_holder) / fraction_dev)
+	if (len(encoded_holder) % 2 == 0):
+		end = len(encoded_holder)
+	else:
+		end = len(encoded_holder)-1
+
+	for i in xrange(0,fraction,2):
+		f1.write(encoded_holder[i])
+		f2.write(encoded_holder[i+1])
+
+	f1.close()
+	f2.close()
+
+	d1 = open(x_train_file, 'w')
+	d2 = open(x_train_file, 'w')
+
+	for i in xrange(fraction, end, 2):
+		d1.write(encoded_holder[i])
+		d2.write(encoded_holder[i+1])	
+
+	d1.close()
+	d2.close()
+
+
+
+
 def generateEncodedFile(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
+	"""Trains on both question and answers"""
 	encoded_holder = []
 	f1 = open(x_train_file, 'w')
 
@@ -197,7 +233,7 @@ def sentence_to_token_ids(sentence, vocabulary, tokenizer=None, normalize_digits
 def read_data(num_movie_scripts):
 	data_tokens = []
 	# Append each line in file to the set
-	for i in range(1, num_movie_scripts):
+	for i in range(0, num_movie_scripts):
 		path = 'data/'+str(i)+'raw.txt'
 		print 'Reading ', path, '...'
 		lines = [line.rstrip('\n') for line in open(path)]
@@ -245,7 +281,7 @@ def read_sentences(num_movie_scripts):
 
 tokenized_sentences = read_sentences(num_movie_scripts)
 #print tokenized_sentences
-generateEncodedFile(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
+generate_encoded_files2(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
 
 
 
