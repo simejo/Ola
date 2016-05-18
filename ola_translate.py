@@ -53,7 +53,7 @@ tf.app.flags.DEFINE_integer("batch_size", 64,
                             "Batch size to use during training.")
 tf.app.flags.DEFINE_integer("size", 1024, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 3, "Number of layers in the model.")
-tf.app.flags.DEFINE_integer("en_vocab_size", 40000, "English vocabulary size.")
+tf.app.flags.DEFINE_integer("vocab_size", 40000, "English vocabulary size.")
 tf.app.flags.DEFINE_integer("fr_vocab_size", 40000, "French vocabulary size.")
 tf.app.flags.DEFINE_string("data_dir", "/tmp", "Data directory")
 tf.app.flags.DEFINE_string("train_dir", "/tmp", "Training directory.")
@@ -114,11 +114,10 @@ def read_data(source_path, target_path, max_size=None):
 def create_model(session, forward_only):
   """Create translation model and initialize or load parameters in session."""
   model = seq2seq_model.Seq2SeqModel(
-      FLAGS.en_vocab_size, FLAGS.fr_vocab_size, _buckets,
+      FLAGS.vocab_size, FLAGS.fr_vocab_size, _buckets,
       FLAGS.size, FLAGS.num_layers, FLAGS.max_gradient_norm, FLAGS.batch_size,
       FLAGS.learning_rate, FLAGS.learning_rate_decay_factor,
       forward_only=forward_only)
-  print(model)
   ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
   if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path):
     print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
@@ -130,11 +129,9 @@ def create_model(session, forward_only):
 
 
 def train():
-  """Train a en->fr translation model using WMT data."""
-  # Prepare WMT data.
-  #print("Preparing WMT data in %s" % FLAGS.data_dir)
+
   """en_train, fr_train, en_dev, fr_dev, _, _ = data_utils.prepare_wmt_data(
-      FLAGS.data_dir, FLAGS.en_vocab_size, FLAGS.fr_vocab_size)"""
+      FLAGS.data_dir, FLAGS.vocab_size, FLAGS.fr_vocab_size)"""
   en_train = './X_train.txt'
   fr_train = './y_train.txt'
   en_dev = './y_dev.txt'
@@ -216,15 +213,7 @@ def decode():
     model.batch_size = 1  # We decode one sentence at a time.
 
     # Load vocabularies.
-    """
-    en_vocab_path = os.path.join(FLAGS.data_dir,
-                                 "vocab%d.en" % FLAGS.en_vocab_size)
-    fr_vocab_path = os.path.join(FLAGS.data_dir,
-                                 "vocab%d.fr" % FLAGS.fr_vocab_size)"""
-    #en_vocab_path = vocab_path #data_utils.initialize_vocabulary(en_vocab_path)
-    en_vocab, _ = prepros.initialize_vocabulary(vocab_path)
-    #rev_fr_vocab_path = vocab_path  #data_utils.initialize_vocabulary(fr_vocab_path)
-    _, rev_fr_vocab = prepros.initialize_vocabulary(vocab_path)
+    vocab, rev_vocab = prepros.initialize_vocabulary(vocab_path)
 
     # Decode from standard input.
     sys.stdout.write("Human >: ")
@@ -232,13 +221,11 @@ def decode():
     sentence = sys.stdin.readline()
     while sentence:
       # Get token-ids for the input sentence.
-      token_ids = prepros.sentence_to_token_ids(tf.compat.as_bytes(sentence), en_vocab)
+      token_ids = prepros.sentence_to_token_ids(tf.compat.as_bytes(sentence), vocab)
       # Which bucket does it belong to?
-      bucket_id = min([b for b in xrange(len(_buckets))
-                       if _buckets[b][0] > len(token_ids)])
+      bucket_id = min([b for b in xrange(len(_buckets)) if _buckets[b][0] > len(token_ids)])
       # Get a 1-element batch to feed the sentence to the model.
-      encoder_inputs, decoder_inputs, target_weights = model.get_batch(
-          {bucket_id: [(token_ids, [])]}, bucket_id)
+      encoder_inputs, decoder_inputs, target_weights = model.get_batch( {bucket_id: [(token_ids, [])]}, bucket_id )
       # Get output logits for the sentence.
       _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
                                        target_weights, bucket_id, True)
@@ -247,15 +234,16 @@ def decode():
       # If there is an EOS symbol in outputs, cut them at that point.
       if prepros.EOS_ID in outputs:
         outputs = outputs[:outputs.index(prepros.EOS_ID)]
-      # Print out French sentence corresponding to outputs.
-      print("Ola >: " + " ".join([tf.compat.as_str(rev_fr_vocab[output]) for output in outputs]))
+
+      print("Ola >: " + " ".join([tf.compat.as_str(rev_vocab[output]) for output in outputs]))
       print("Human >: ", end="")
       sys.stdout.flush()
       sentence = sys.stdin.readline()
 
-
+#KAN FJERNES
+"""
 def self_test():
-  """Test the translation model."""
+  #Test the translation model.
   with tf.Session() as sess:
     print("Self-test for neural translation model.")
     # Create model with vocabularies of 10, 2 small buckets, 2 layers of 32.
@@ -272,12 +260,12 @@ def self_test():
           data_set, bucket_id)
       model.step(sess, encoder_inputs, decoder_inputs, target_weights,
                  bucket_id, False)
-
+"""
 
 def main(_):
-  if FLAGS.self_test:
-    self_test()
-  elif FLAGS.decode:
+  #if FLAGS.self_test:
+   # self_test()
+  if FLAGS.decode:
     decode()
   else:
     train()

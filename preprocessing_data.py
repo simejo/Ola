@@ -54,7 +54,7 @@ def build_dataset(words, vocabulary_size):
 	reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
 	return data, count, dictionary, reverse_dictionary
 
-def createVocabulary(dictionary, vocabulary_path):
+def create_vocabulary(dictionary, vocabulary_path):
 	f = open(vocabulary_path, 'w')
 	
 	for key in dictionary:
@@ -62,24 +62,7 @@ def createVocabulary(dictionary, vocabulary_path):
 	f.close()
 
 def initialize_vocabulary(vocabulary_path):
-  """Initialize vocabulary from file.
-
-  We assume the vocabulary is stored one-item-per-line, so a file:
-    dog
-    cat
-  will result in a vocabulary {"dog": 0, "cat": 1}, and this function will
-  also return the reversed-vocabulary ["dog", "cat"].
-
-  Args:
-    vocabulary_path: path to the file containing the vocabulary.
-
-  Returns:
-    a pair: the vocabulary (a dictionary mapping string to integers), and
-    the reversed vocabulary (a list, which reverses the vocabulary mapping).
-
-  Raises:
-    ValueError: if the provided vocabulary_path does not exist.
-  """
+  # finds vocabulary file
   if gfile.Exists(vocabulary_path):
     rev_vocab = []
     with gfile.GFile(vocabulary_path, mode="rb") as f:
@@ -93,13 +76,12 @@ def initialize_vocabulary(vocabulary_path):
 
 def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
 	encoded_holder = []
-	for sentence in tokenized_sentences: 
-		encoded_holder.append(encode_sentence[sentence])
+	unk_id = dictionary['_UNK']
+	for sentence in tokenized_sentences:
+		encoded_holder.append(encode_sentence(sentence, dictionary, unk_id))
 
-	encoded_holder = encoded_holder.reverse()
 	f1 = open(x_train_file, 'w')
-	f2 = open(x_train_file, 'w')
-
+	f2 = open(y_train_file, 'w')
 	fraction = int(len(encoded_holder) / fraction_dev)
 	if (len(encoded_holder) % 2 == 0):
 		end = len(encoded_holder)
@@ -107,18 +89,18 @@ def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, 
 		end = len(encoded_holder)-1
 
 	for i in xrange(0,fraction,2):
-		f1.write(encoded_holder[i])
-		f2.write(encoded_holder[i+1])
+		f1.write(str(encoded_holder[i]) + '\n')
+		f2.write(str(encoded_holder[i+1]) + '\n')
 
 	f1.close()
 	f2.close()
 
-	d1 = open(x_train_file, 'w')
-	d2 = open(x_train_file, 'w')
+	d1 = open(x_dev_file, 'w')
+	d2 = open(y_dev_file, 'w')
 
 	for i in xrange(fraction, end, 2):
-		d1.write(encoded_holder[i])
-		d2.write(encoded_holder[i+1])	
+		d1.write(str(encoded_holder[i]) + '\n')
+		d2.write(str(encoded_holder[i+1]) + '\n')	
 
 	d1.close()
 	d2.close()
@@ -126,7 +108,7 @@ def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, 
 
 
 
-def generateEncodedFile(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
+def generate_encoded_files(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
 	"""Trains on both question and answers"""
 	encoded_holder = []
 	f1 = open(x_train_file, 'w')
@@ -181,7 +163,7 @@ def basic_tokenizer(sentence):
 
 
 def encode_sentence(sentence, dictionary, unk_id):
-	# Extract first word
+	# Extract first word (and don't add any space)
 	if not sentence:
 		return ""
 	first_word = sentence.pop(0)
@@ -190,7 +172,7 @@ def encode_sentence(sentence, dictionary, unk_id):
 	else:
 		encoded_sentence = str(unk_id)
 
-	# Loop rest of the words
+	# Loop rest of the words (and add space in front)
 	for word in sentence:
 		if word in dictionary:
 			encoded_word = dictionary[word]
@@ -253,7 +235,7 @@ print '------------------------------------------------'
 
 tokenized_data = read_data(num_movie_scripts)
 data, count, dictionary, reverse_dictionary = build_dataset(tokenized_data, vocabulary_size)
-createVocabulary(reverse_dictionary, 'vocabulary_for_' + str(num_movie_scripts) + '_movies.txt')
+create_vocabulary(reverse_dictionary, 'vocabulary_for_' + str(num_movie_scripts) + '_movies.txt')
 
 
 # Generate a encoded file using the freated dictionary
@@ -268,7 +250,7 @@ print '------------------------------------------------'
 def read_sentences(num_movie_scripts):
 	data_tokens = []
 	# Append each line in file to the set
-	for i in range(1, num_movie_scripts):
+	for i in range(0, num_movie_scripts):
 		path = 'data/'+str(i)+'raw.txt'
 		print 'Reading ', path, '...'
 		lines = [line.rstrip('\n') for line in open(path)]
