@@ -41,7 +41,7 @@ import tensorflow as tf
 import preprocessing_data as prepros
 from tensorflow.models.rnn.translate import seq2seq_model
 
-vocab_path = './vocabulary_for_100_movies.txt'
+vocab_path = './vocabulary_for_movies.txt'
 
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")

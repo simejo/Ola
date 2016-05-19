@@ -3,7 +3,7 @@ import collections
 import shutil
 from tensorflow.python.platform import gfile
 
-num_movie_scripts = 1
+num_movie_scripts = 2000
 vocabulary_size = 10000
 fraction_dev = 50
 path_for_x_train = 'X_train.txt'
@@ -235,7 +235,7 @@ print '------------------------------------------------'
 
 tokenized_data = read_data(num_movie_scripts)
 data, count, dictionary, reverse_dictionary = build_dataset(tokenized_data, vocabulary_size)
-create_vocabulary(reverse_dictionary, 'vocabulary_for_' + str(num_movie_scripts) + '_movies.txt')
+create_vocabulary(reverse_dictionary, 'vocabulary_for_movies.txt')
 
 
 # Generate a encoded file using the freated dictionary
