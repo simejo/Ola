@@ -51,6 +51,8 @@ tf.app.flags.DEFINE_float("max_gradient_norm", 5.0,
                           "Clip gradients to this norm.")
 tf.app.flags.DEFINE_integer("batch_size", 64,
                             "Batch size to use during training.")
+tf.app.flags.DEFINE_integer("num_movie_scripts", 2318,
+                            "Number of movie scripts in training data")
 tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
 tf.app.flags.DEFINE_integer("vocab_size", 10000, "English vocabulary size.")
@@ -124,6 +126,8 @@ def create_model(session, forward_only):
     model.saver.restore(session, ckpt.model_checkpoint_path)
   else:
     print("Created model with fresh parameters.")
+    # def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_train = 'X_train.txt', path_for_y_train = 'y_train.txt', path_for_x_dev = 'X_dev.txt', path_for_y_dev = 'y_dev.txt'):
+    prepros.make_files(,1000)
     session.run(tf.initialize_all_variables())
   return model
 

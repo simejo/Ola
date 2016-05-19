@@ -229,21 +229,6 @@ def read_data(num_movie_scripts):
 	return data_tokens
 
 
-# Generate dictionary for dataset
-print '------------------------------------------------'
-print ' Generating dictionary based on ', str(num_movie_scripts - 1), ' scripts'
-print '------------------------------------------------'
-
-tokenized_data = read_data(num_movie_scripts)
-data, count, dictionary, reverse_dictionary = build_dataset(tokenized_data, vocabulary_size)
-create_vocabulary(reverse_dictionary, 'vocabulary_for_movies.txt')
-
-
-# Generate a encoded file using the freated dictionary
-print '------------------------------------------------'
-print ' Creating encoded file using created dictionary'
-print ' (Saved in  ', path_for_x_train, ')'
-print '------------------------------------------------'
 
 # FROM DATA UTILS
 # Reads data and puts every sentence in a TWO DIMENSIONAL array as tokens
@@ -262,9 +247,28 @@ def read_sentences(num_movie_scripts):
 		data_tokens.extend(data_tokens_temp)
 	return data_tokens
 
-tokenized_sentences = read_sentences(num_movie_scripts)
-#print tokenized_sentences
-generate_encoded_files2(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
+
+
+def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_train = 'X_train.txt', path_for_y_train = 'y_train.txt', path_for_x_dev = 'X_dev.txt', path_for_y_dev = 'y_dev.txt'):
+	# Generate dictionary for dataset
+	print '------------------------------------------------'
+	print ' Generating dictionary based on ', str(num_movie_scripts - 1), ' scripts'
+	print '------------------------------------------------'
+
+	tokenized_data = read_data(num_movie_scripts)
+	data, count, dictionary, reverse_dictionary = build_dataset(tokenized_data, vocabulary_size)
+	create_vocabulary(reverse_dictionary, 'vocabulary_for_movies.txt')
+
+
+	# Generate a encoded file using the freated dictionary
+	print '------------------------------------------------'
+	print ' Creating encoded file using created dictionary'
+	print ' (Saved in  ', path_for_x_train, ')'
+	print '------------------------------------------------'
+	tokenized_sentences = read_sentences(num_movie_scripts)
+	#print tokenized_sentences
+	generate_encoded_files2(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
+
 
 
 
