@@ -3,7 +3,7 @@ import collections
 import shutil
 from tensorflow.python.platform import gfile
 
-num_movie_scripts = 2000
+num_movie_scripts = 10
 vocabulary_size = 10000
 fraction_dev = 50
 path_for_x_train = 'X_train.txt'
@@ -23,7 +23,7 @@ GO_ID = 1
 EOS_ID = 2
 UNK_ID = 3
 
-_WORD_SPLIT = re.compile(b"([.,!?\"':;)(])")
+_WORD_SPLIT = re.compile(b"([.,!?\":;)(])")
 _DIGIT_RE = re.compile(br"\d")
 
 
@@ -75,6 +75,7 @@ def initialize_vocabulary(vocabulary_path):
 
 
 def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
+	"""Sentence A is in x_train, Sentence B in y_train"""
 	encoded_holder = []
 	unk_id = dictionary['_UNK']
 	for sentence in tokenized_sentences:
@@ -109,7 +110,7 @@ def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, 
 
 
 def generate_encoded_files(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
-	"""Trains on both question and answers"""
+	"""Sentence A is in x_train and y_train, Sentence B in X_train and y_train"""
 	encoded_holder = []
 	f1 = open(x_train_file, 'w')
 
