@@ -127,7 +127,7 @@ def create_model(session, forward_only):
   else:
     print("Created model with fresh parameters.")
     # def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_train = 'X_train.txt', path_for_y_train = 'y_train.txt', path_for_x_dev = 'X_dev.txt', path_for_y_dev = 'y_dev.txt'):
-    prepros.make_files(,1000)
+    prepros.make_files(FLAGS.num_movie_scripts,FLAGS.vocab_size)
     session.run(tf.initialize_all_variables())
   return model
 
