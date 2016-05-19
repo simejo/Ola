@@ -26,13 +26,6 @@ UNK_ID = 3
 _WORD_SPLIT = re.compile(b"([.,!?\":;)(])")
 _DIGIT_RE = re.compile(br"\d")
 
-
-"""
-TODO: 
-1. run generateEncodedFile on all the scripts
-2. Remove the space after the 'fnutts' (I' ll, haven' t)
-"""
-
 #FROM DATA UTILS
 # Build the dictionary with word-IDs from self-made dictionary and replace rare words with UNK token.
 def build_dataset(words, vocabulary_size):
@@ -267,7 +260,7 @@ def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_t
 	print '------------------------------------------------'
 	tokenized_sentences = read_sentences(num_movie_scripts)
 	#print tokenized_sentences
-	generate_encoded_files2(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
+	generate_encoded_files(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
 
 
 
