@@ -100,8 +100,6 @@ def generate_encoded_files2(x_train_file, y_train_file, x_dev_file, y_dev_file, 
 	d2.close()
 
 
-
-
 def generate_encoded_files(x_train_file, y_train_file, x_dev_file, y_dev_file, tokenized_sentences, dictionary):
 	"""Sentence A is in x_train and y_train, Sentence B in X_train and y_train"""
 	encoded_holder = []
@@ -149,7 +147,7 @@ def generate_encoded_files(x_train_file, y_train_file, x_dev_file, y_dev_file, t
 	d2.close()
 
 def basic_tokenizer(sentence):
-  """Very basic tokenizer: split the sentence into a list of tokens."""
+  """Very basic tokenizer: split the sentence into a list of tokens"""
   words = []
   for space_separated_fragment in sentence.strip().split():
     words.extend(re.split(_WORD_SPLIT, space_separated_fragment))
@@ -176,36 +174,20 @@ def encode_sentence(sentence, dictionary, unk_id):
 	return encoded_sentence
 
 
-def sentence_to_token_ids(sentence, vocabulary, tokenizer=None, normalize_digits=True):
+def sentence_to_token_ids(sentence, vocabulary):
   """Convert a string to list of integers representing token-ids.
 
   For example, a sentence "I have a dog" may become tokenized into
   ["I", "have", "a", "dog"] and with vocabulary {"I": 1, "have": 2,
   "a": 4, "dog": 7"} this function will return [1, 2, 4, 7].
 
-  Args:
-    sentence: the sentence in bytes format to convert to token-ids.
-    vocabulary: a dictionary mapping tokens to integers.
-    tokenizer: a function to use to tokenize each sentence;
-      if None, basic_tokenizer will be used.
-    normalize_digits: Boolean; if true, all digits are replaced by 0s.
-
   Returns:
     a list of integers, the token-ids for the sentence.
   """
-
-  if tokenizer:
-    words = tokenizer(sentence)
-  else:
-    words = basic_tokenizer(sentence)
-  if not normalize_digits:
-    return [vocabulary.get(w, UNK_ID) for w in words]
-  # Normalize digits by 0 before looking words up in the vocabulary.
-  return [vocabulary.get(re.sub(_DIGIT_RE, b"0", w), UNK_ID) for w in words]
+  words = basic_tokenizer(sentence)
+  return [vocabulary.get(w, UNK_ID) for w in words]
 
 
-
-#FROM DATA UTILS
 def read_data(num_movie_scripts):
 	data_tokens = []
 	# Append each line in file to the set
@@ -222,8 +204,6 @@ def read_data(num_movie_scripts):
 	return data_tokens
 
 
-
-# FROM DATA UTILS
 # Reads data and puts every sentence in a TWO DIMENSIONAL array as tokens
 # data_tokens[0] = ['This', 'is', 'a', 'sentence']
 def read_sentences(num_movie_scripts):
@@ -245,7 +225,7 @@ def read_sentences(num_movie_scripts):
 def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_train = 'X_train.txt', path_for_y_train = 'y_train.txt', path_for_x_dev = 'X_dev.txt', path_for_y_dev = 'y_dev.txt'):
 	# Generate dictionary for dataset
 	print '------------------------------------------------'
-	print ' Generating dictionary based on ', str(num_movie_scripts - 1), ' scripts'
+	print ' Generating dictionary based on ', str(num_movie_scripts), ' scripts'
 	print '------------------------------------------------'
 
 	tokenized_data = read_data(num_movie_scripts)
@@ -253,13 +233,12 @@ def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_t
 	create_vocabulary(reverse_dictionary, 'vocabulary_for_movies.txt')
 
 
-	# Generate a encoded file using the freated dictionary
+	# Generate an encoded file using the freated dictionary
 	print '------------------------------------------------'
 	print ' Creating encoded file using created dictionary'
 	print ' (Saved in  ', path_for_x_train, ')'
 	print '------------------------------------------------'
 	tokenized_sentences = read_sentences(num_movie_scripts)
-	#print tokenized_sentences
 	generate_encoded_files(path_for_x_train, path_for_y_train, path_for_x_dev, path_for_y_dev, tokenized_sentences, dictionary)
 
 
