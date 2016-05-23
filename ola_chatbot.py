@@ -39,7 +39,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 import preprocessing_data as prepros
-import seq2seq_model
+from tensorflow.models.rnn.translate import seq2seq_model
 
 vocab_path = './vocabulary_for_movies.txt'
 
