@@ -74,8 +74,7 @@ class Seq2SeqModel(object):
     self.buckets = buckets
     self.batch_size = batch_size
     self.learning_rate = tf.Variable(float(learning_rate), trainable=False)
-    self.learning_rate_decay_op = self.learning_rate.assign(
-        self.learning_rate * learning_rate_decay_factor)
+    self.learning_rate_decay_op = self.learning_rate.assign(self.learning_rate * learning_rate_decay_factor)
     self.global_step = tf.Variable(0, trainable=False)
 
     # If we use sampled softmax, we need an output projection.

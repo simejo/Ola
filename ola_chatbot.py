@@ -39,7 +39,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 import preprocessing_data as prepros
-import seq2seq_model
+from tensorflow.models.rnn.translate import seq2seq_model
 
 vocab_path = './vocabulary_for_movies.txt'
 
@@ -55,8 +55,8 @@ tf.app.flags.DEFINE_integer("vocab_size", 10000, "Vocabulary size")
 tf.app.flags.DEFINE_string("data_dir", "./", "Data directory")
 tf.app.flags.DEFINE_string("train_dir", "./", "Training directory")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 50, "How many training steps to do per checkpoint")
+tf.app.flags.DEFINE_boolean("use_lstm", False, "Use LSTM as cell")
 tf.app.flags.DEFINE_boolean("decode", False, "Set to True for interactive decoding")
-tf.app.flags.DEFINE_boolean("self_test", False, "Run a self-test if this is set to True")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -107,7 +107,7 @@ def create_model(session, forward_only):
   model = seq2seq_model.Seq2SeqModel(
       FLAGS.vocab_size, FLAGS.vocab_size, _buckets,
       FLAGS.size, FLAGS.num_layers, FLAGS.max_gradient_norm, FLAGS.batch_size,
-      FLAGS.learning_rate, FLAGS.learning_rate_decay_factor,
+      FLAGS.learning_rate, FLAGS.learning_rate_decay_factor, use_lstm = FLAGS.use_lstm,
       forward_only=forward_only)
   ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
   if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path):
@@ -143,8 +143,7 @@ def train():
     # A bucket scale is a list of increasing numbers from 0 to 1 that we'll use
     # to select a bucket. Length of [scale[i], scale[i+1]] is proportional to
     # the size if i-th training bucket, as used later.
-    train_buckets_scale = [sum(train_bucket_sizes[:i + 1]) / train_total_size
-                           for i in xrange(len(train_bucket_sizes))]
+    train_buckets_scale = [sum(train_bucket_sizes[:i + 1]) / train_total_size for i in xrange(len(train_bucket_sizes))]
 
     # This is the training loop.
     step_time, loss = 0.0, 0.0
@@ -154,15 +153,12 @@ def train():
       # Choose a bucket according to data distribution. We pick a random number
       # in [0, 1] and use the corresponding interval in train_buckets_scale.
       random_number_01 = np.random.random_sample()
-      bucket_id = min([i for i in xrange(len(train_buckets_scale))
-                       if train_buckets_scale[i] > random_number_01])
+      bucket_id = min([i for i in xrange(len(train_buckets_scale)) if train_buckets_scale[i] > random_number_01])
 
       # Get a batch and make a step.
       start_time = time.time()
-      encoder_inputs, decoder_inputs, target_weights = model.get_batch(
-          train_set, bucket_id)
-      _, step_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
-                                   target_weights, bucket_id, False)
+      encoder_inputs, decoder_inputs, target_weights = model.get_batch(train_set, bucket_id)
+      _, step_loss, _ = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, False)
       step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
       loss += step_loss / FLAGS.steps_per_checkpoint
       current_step += 1
@@ -217,12 +213,12 @@ def decode():
       # Get token-ids for the input sentence.
       token_ids = prepros.sentence_to_token_ids(tf.compat.as_bytes(sentence), vocab)
       # Which bucket does it belong to?
+      # Find the smallest bucket that fits
       bucket_id = min([b for b in xrange(len(_buckets)) if _buckets[b][0] > len(token_ids)])
       # Get a 1-element batch to feed the sentence to the model.
       encoder_inputs, decoder_inputs, target_weights = model.get_batch( {bucket_id: [(token_ids, [])]}, bucket_id )
       # Get output logits for the sentence.
-      _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
-                                       target_weights, bucket_id, True)
+      _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, True)
       # This is a greedy decoder - outputs are just argmaxes of output_logits.
       outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
       # If there is an EOS symbol in outputs, cut them at that point.
