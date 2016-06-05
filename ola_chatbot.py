@@ -18,22 +18,25 @@ from tensorflow.models.rnn.translate import seq2seq_model
 
 vocab_path = './vocabulary_for_movies.txt'
 
-
-tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate")
-tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99, "Learning rate decays by this much")
-tf.app.flags.DEFINE_float("max_gradient_norm", 5.0, "Clip gradients to this norm. Prevent exploding gradients")
+# Variables user can change
 tf.app.flags.DEFINE_integer("batch_size", 64, "Batch size to use during training")
-tf.app.flags.DEFINE_integer("num_movie_scripts", 2318, "Number of movie scripts in training data")
-tf.app.flags.DEFINE_integer("size", 1024, "Size of each model layer")
-tf.app.flags.DEFINE_integer("num_layers", 3, "Number of layers in the model")
+tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer")
+tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model")
 tf.app.flags.DEFINE_integer("vocab_size", 10000, "Vocabulary size")
-tf.app.flags.DEFINE_string("data_dir", "./", "Data directory")
-tf.app.flags.DEFINE_string("train_dir", "./", "Training directory")
-tf.app.flags.DEFINE_integer("steps_per_checkpoint", 50, "How many training steps to do per checkpoint")
 tf.app.flags.DEFINE_boolean("use_lstm", False, "Use LSTM as cell")
 tf.app.flags.DEFINE_boolean("decode", False, "Set to True for interactive decoding")
 
 FLAGS = tf.app.flags.FLAGS
+
+
+# Static variables
+learning_rate = 0.5
+learning_rate_decay = 0.99
+train_dir = "./"
+steps_per_checkpoint = 50
+gradients_clip = 5.0
+num_movie_scripts = 2318
+
 
 # We use a number of buckets and pad to the closest one for efficiency.
 # See seq2seq_model.Seq2SeqModel for details of how they work.
@@ -67,16 +70,16 @@ def read_data(source_path, target_path):
 def create_model(session, forward_only):
   model = seq2seq_model.Seq2SeqModel(
       FLAGS.vocab_size, FLAGS.vocab_size, _buckets,
-      FLAGS.size, FLAGS.num_layers, FLAGS.max_gradient_norm, FLAGS.batch_size,
-      FLAGS.learning_rate, FLAGS.learning_rate_decay_factor, use_lstm = FLAGS.use_lstm,
+      FLAGS.size, FLAGS.num_layers, gradients_clip, FLAGS.batch_size,
+      learning_rate, learning_rate_decay, use_lstm = FLAGS.use_lstm,
       forward_only=forward_only)
-  ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+  ckpt = tf.train.get_checkpoint_state(train_dir)
   if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path):
     print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
     model.saver.restore(session, ckpt.model_checkpoint_path)
   else:
     print("Created model with fresh parameters.")
-    prepros.make_files(FLAGS.num_movie_scripts,FLAGS.vocab_size)
+    prepros.make_files(num_movie_scripts,FLAGS.vocab_size)
     session.run(tf.initialize_all_variables())
   return model
 
@@ -115,12 +118,12 @@ def train():
       start_time = time.time()
       encoder_inputs, decoder_inputs, target_weights = model.get_batch(train_set, bucket_id)
       _, step_loss, _ = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, False)
-      step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
-      loss += step_loss / FLAGS.steps_per_checkpoint
+      step_time += (time.time() - start_time) / steps_per_checkpoint
+      loss += step_loss / steps_per_checkpoint
       current_step += 1
 
       # Once in a while, we save checkpoint, print statistics, and run evals.
-      if current_step % FLAGS.steps_per_checkpoint == 0:
+      if current_step % steps_per_checkpoint == 0:
         # Print statistics for the previous epoch.
         if loss < 300:
           perplexity = math.exp(loss)
@@ -133,7 +136,7 @@ def train():
           sess.run(model.learning_rate_decay_op)
         previous_losses.append(loss)
         # Save checkpoint and zero timer and loss.
-        checkpoint_path = os.path.join(FLAGS.train_dir, "chatbot.ckpt")
+        checkpoint_path = os.path.join(train_dir, "chatbot.ckpt")
         model.saver.save(sess, checkpoint_path, global_step=model.global_step)
         step_time, loss = 0.0, 0.0
         # Run evals on development set and print their perplexity.
