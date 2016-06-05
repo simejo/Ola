@@ -1,29 +1,3 @@
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-
-"""Binary for training translation models and decoding from them.
-Running this program without --decode will download the WMT corpus into
-the directory specified as --data_dir and tokenize it in a very basic way,
-and then start training a model saving checkpoints to --train_dir.
-Running with --decode starts an interactive loop so you can see how
-the current checkpoint translates English sentences into French.
-See the following papers for more information on neural translation models.
- * http://arxiv.org/abs/1409.3215
- * http://arxiv.org/abs/1409.0473
- * http://arxiv.org/abs/1412.2007
-"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -39,6 +13,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 import preprocessing_data as prepros
+# Use tensorflows translate seq2seq model
 from tensorflow.models.rnn.translate import seq2seq_model
 
 vocab_path = './vocabulary_for_movies.txt'
@@ -66,21 +41,7 @@ _buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
 
 def read_data(source_path, target_path):
-  """Read data from source and target files and put into buckets.
-  Args:
-    source_path: path to the files with token-ids for the source language.
-    target_path: path to the file with token-ids for the target language;
-      it must be aligned with the source file: n-th line contains the desired
-      output for n-th line from the source_path.
-    max_size: maximum number of lines to read, all other will be ignored;
-      if 0 or None, data files will be read completely (no limit).
-  Returns:
-    data_set: a list of length len(_buckets); data_set[n] contains a list of
-      (source, target) pairs read from the provided data files that fit
-      into the n-th bucket, i.e., such that len(source) < _buckets[n][0] and
-      len(target) < _buckets[n][1]; source and target are lists of token-ids.
-  """
-
+ 
   data_set = [[] for _ in _buckets]
   with tf.gfile.GFile(source_path, mode="r") as source_file:
     with tf.gfile.GFile(target_path, mode="r") as target_file:
@@ -115,7 +76,6 @@ def create_model(session, forward_only):
     model.saver.restore(session, ckpt.model_checkpoint_path)
   else:
     print("Created model with fresh parameters.")
-    # def make_files(num_movie_scripts, vocabulary_size, fraction_dev=50, path_for_x_train = 'X_train.txt', path_for_y_train = 'y_train.txt', path_for_x_dev = 'X_dev.txt', path_for_y_dev = 'y_dev.txt'):
     prepros.make_files(FLAGS.num_movie_scripts,FLAGS.vocab_size)
     session.run(tf.initialize_all_variables())
   return model
@@ -130,7 +90,7 @@ def train():
 
   with tf.Session() as sess:
     # Create model.
-    print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
+    print("Creating " + str(FLAGS.num_layers) + " layers of " + str(FLAGS.size))
     model = create_model(sess, False)
 
     # Read data into buckets and compute their sizes.
@@ -140,9 +100,6 @@ def train():
     train_bucket_sizes = [len(train_set[b]) for b in xrange(len(_buckets))]
     train_total_size = float(sum(train_bucket_sizes))
 
-    # A bucket scale is a list of increasing numbers from 0 to 1 that we'll use
-    # to select a bucket. Length of [scale[i], scale[i+1]] is proportional to
-    # the size if i-th training bucket, as used later.
     train_buckets_scale = [sum(train_bucket_sizes[:i + 1]) / train_total_size for i in xrange(len(train_bucket_sizes))]
 
     # This is the training loop.
@@ -150,10 +107,9 @@ def train():
     current_step = 0
     previous_losses = []
     while True:
-      # Choose a bucket according to data distribution. We pick a random number
-      # in [0, 1] and use the corresponding interval in train_buckets_scale.
-      random_number_01 = np.random.random_sample()
-      bucket_id = min([i for i in xrange(len(train_buckets_scale)) if train_buckets_scale[i] > random_number_01])
+
+      ran_num = np.random.random_sample()
+      bucket_id = min([i for i in xrange(len(train_buckets_scale)) if train_buckets_scale[i] > ran_num])
 
       # Get a batch and make a step.
       start_time = time.time()
@@ -171,8 +127,7 @@ def train():
         else:
           perplexity = float('inf')
         print ("global step %d learning rate %.4f step-time %.2f perplexity "
-               "%.2f" % (model.global_step.eval(), model.learning_rate.eval(),
-                         step_time, perplexity))
+               "%.2f" % (model.global_step.eval(), model.learning_rate.eval(), step_time, perplexity))
         # Decrease learning rate if no improvement was seen over last 3 times.
         if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
           sess.run(model.learning_rate_decay_op)
@@ -215,11 +170,8 @@ def decode():
       # Which bucket does it belong to?
       # Find the smallest bucket that fits
       bucket_id = min([b for b in xrange(len(_buckets)) if _buckets[b][0] > len(token_ids)])
-      # Get a 1-element batch to feed the sentence to the model.
       encoder_inputs, decoder_inputs, target_weights = model.get_batch( {bucket_id: [(token_ids, [])]}, bucket_id )
-      # Get output logits for the sentence.
       _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs, target_weights, bucket_id, True)
-      # This is a greedy decoder - outputs are just argmaxes of output_logits.
       outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
       # If there is an EOS symbol in outputs, cut them at that point.
       if prepros.EOS_ID in outputs:
